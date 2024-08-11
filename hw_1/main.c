@@ -82,7 +82,7 @@ struct ZipHelperData is_zip(FILE *file)
     return zip;
 }
 
-void list_files(FILE *file, int position)
+void list_files_names(FILE *file, int position)
 {
     fseek(file, position, SEEK_SET);
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
     struct ZipHelperData zip = is_zip(file);
     if (zip.is_zip)
     {
-        list_files(file, zip.zip_start_position);
+        list_files_names(file, zip.zip_start_position);
     }
 
     fclose(file);
