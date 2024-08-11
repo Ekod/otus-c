@@ -34,7 +34,7 @@ struct ZipLocalFileHeader
     uint8_t *extraField;
 };
 
-struct ZipHelperData /*TODO come up with a better name*/
+struct ZipHelperData
 {
     bool is_zip;
     int zip_start_position;
@@ -90,7 +90,9 @@ void list_files(FILE *file, int position)
     fread(&header, sizeof(header), 1, file);
 
     char fileName[header.filenameLength];
-    fread(fileName, header.filenameLength, 1, file);
+    for(uint8_t i = 0; i < header.filenameLength; ++i){
+        fileName[i] = (char)header.filename++;
+    }
     printf("File: %s\n", fileName);
 }
 
