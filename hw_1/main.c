@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#pragma pack(push, 1)
 struct ZipLocalFileHeader
 {
     // Обязательная сигнатура, равна 0x04034b50
@@ -29,9 +30,6 @@ struct ZipLocalFileHeader
     // Длина поля с дополнительными данными
     uint16_t extraFieldLength;
     // Название файла (размером filenameLength)
-    uint8_t *filename;
-    // Дополнительные данные (размером extraFieldLength)
-    uint8_t *extraField;
 };
 
 struct ZipHelperData
@@ -84,16 +82,28 @@ struct ZipHelperData is_zip(FILE *file)
 
 void list_files_names(FILE *file, int position)
 {
+
+    long fileSize = get_file_size(file);
     fseek(file, position, SEEK_SET);
 
-    struct ZipLocalFileHeader header;
-    fread(&header, sizeof(header), 1, file);
+    while (ftell(file) < fileSize)
+    {
+        struct ZipLocalFileHeader header;
+        fread(&header, sizeof(header), 1, file);
 
-    char fileName[header.filenameLength];
-    for(uint8_t i = 0; i < header.filenameLength; ++i){
-        fileName[i] = (char)header.filename++;
+        if (header.signature == 0x04034b50)
+        {
+            char fileName[header.filenameLength + 1];
+            fread(fileName, header.filenameLength, 1, file);
+            fileName[header.filenameLength] = '\0';
+            printf("File: %s\n", fileName);
+            fseek(file, header.extraFieldLength + header.compressedSize, SEEK_CUR);
+        }
+        else
+        {
+            break;
+        }
     }
-    printf("File: %s\n", fileName);
 }
 
 int main(int argc, char *argv[])
@@ -114,10 +124,17 @@ int main(int argc, char *argv[])
     struct ZipHelperData zip = is_zip(file);
     if (zip.is_zip)
     {
+        printf("file has zip format\n");
         list_files_names(file, zip.zip_start_position);
+    }
+    else
+    {
+        printf("file does not have zip format");
     }
 
     fclose(file);
 
     return 0;
 }
+
+#pragma pack(pop)
